@@ -8,8 +8,10 @@
   ],
   "routes": [
     {
-      "src": "/(.*)",
+      "src": "/api/(.*)",
       "dest": "packages/api/dist/index.js"
     }
-  ]
+  ],
+  "installCommand": "npm install --workspaces",
+  "outputDirectory": "packages/api/dist"  // Specify output directory if needed
 }
