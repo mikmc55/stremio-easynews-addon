@@ -47,7 +47,7 @@ export class EasynewsAPI {
       gps: query,
     };
 
-    const url = new URL(`${this.baseUrl}/2.0/search/solr-search/advanced`);
+    const url = new URL(`${this.baseUrl}/2.0/search/solr-search/?`);
     url.search = new URLSearchParams(searchParams).toString();
 
     const res = await fetch(url, {
