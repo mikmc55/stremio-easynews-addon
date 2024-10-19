@@ -13,5 +13,5 @@
     }
   ],
   "installCommand": "npm install --workspaces",
-  "outputDirectory": "packages/api/dist"  //
+  "outputDirectory": "packages/api/dist"
 }
