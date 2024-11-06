@@ -1,4 +1,4 @@
-import { EasynewsSearchResponse, FileData } from '@easynews/api';
+ { EasynewsSearchResponse, FileData } from '@easynews/api';
 import { MetaProviderResponse } from './meta';
 import { ContentType } from 'stremio-addon-sdk';
 import { parse as parseTorrentTitle } from 'parse-torrent-title';
@@ -18,28 +18,52 @@ export function isBadVideo(file: FileData) {
 export function sanitizeTitle(title: string) {
   return (
     title
-      // Normalize to decompose accents into base characters
-      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-      // replace common separators with spaces
-      .replace(/[-_.]/g, ' ')
-      // remove non-alphanumeric characters except for apostrophes
-      .replace(/[^\w\s']/g, '')
-      // remove spaces at the beginning and end
+      // Normalize accents (e.g., é -> e, à -> a)
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      // Replace common separators with spaces
+      .replaceAll('-', ' ')
+      .replaceAll('_', ' ')
+      .replaceAll('.', ' ')
+      // Keep apostrophes
+      .replace(/[^\w\s']/g, '') 
+      // Replace multiple spaces with a single space
+      .replace(/\s+/g, ' ') 
+      // Remove spaces at the beginning and end
       .trim()
   );
 }
 
+export function cleanTitle(name = "") {
+  return sanitizeTitle(name)
+    .toLowerCase()
+    .replace(/\s+the\s+/g, " ")
+    .replace(/\s+and\s+/g, " ")
+    .replace(/\s+of\s+/g, " ")
+    .replace(/\s+in\s+/g, " ")
+    .replace(/\s+to\s+/g, " ")
+    .replace(/\s+it\s+/g, " ")
+    .replace(/\s+is\s+/g, " ")
+    .replace(/\s+for\s+/g, " ")
+    .replace(/\s+that\s+/g, " ")
+    .replace(/\s+on\s+/g, " ")
+    .replace(/\s+at\s+/g, " ")
+    .replace(/\s+with\s+/g, " ")
+    .replace(/\s+a\s+/g, " ")
+    .replace(/\s+an\s+/g, " ")
+    .trim();
+}
+
 export function matchesTitle(title: string, query: string, strict: boolean) {
-  const sanitizedQuery = sanitizeTitle(query).toLowerCase().trim();
+  const sanitizedQuery = cleanTitle(query).toLowerCase().trim();
 
   if (strict) {
     const { title: movieTitle } = parseTorrentTitle(title);
     if (movieTitle) {
-      return sanitizeTitle(movieTitle).toLowerCase().trim() === sanitizedQuery;
+      return cleanTitle(movieTitle).toLowerCase().trim() === sanitizedQuery;
     }
   }
 
-  const sanitizedTitle = sanitizeTitle(title).toLowerCase().trim();
+  const sanitizedTitle = cleanTitle(title).toLowerCase().trim();
   
   // Updated to use `includes` for a flexible match
   return sanitizedTitle.includes(sanitizedQuery);
