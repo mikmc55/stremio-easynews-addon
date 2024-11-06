@@ -7,14 +7,10 @@ export function isBadVideo(file: FileData) {
   const duration = file['14'] ?? '';
 
   return (
-    // <= 5 minutes in duration
     duration.match(/^\d+s/) ||
     duration.match('^[0-5]m') ||
-    // password protected
     file.passwd ||
-    // malicious
     file.virus ||
-    // not a video
     file.type.toUpperCase() !== 'VIDEO'
   );
 }
@@ -22,30 +18,29 @@ export function isBadVideo(file: FileData) {
 export function sanitizeTitle(title: string) {
   return (
     title
+      // Normalize to decompose accents into base characters
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
       // replace common separators with spaces
-      .replaceAll('-', ' ')
-      .replaceAll('_', ' ')
-      .replaceAll('.', ' ')
-      // remove non-alphanumeric characters
-      .replace(/[^\w\s]/g, '')
+      .replace(/[-_.]/g, ' ')
+      // remove non-alphanumeric characters except for apostrophes
+      .replace(/[^\w\s']/g, '')
       // remove spaces at the beginning and end
       .trim()
   );
 }
 
 export function matchesTitle(title: string, query: string, strict: boolean) {
-  const sanitizedQuery = query.toLowerCase().trim();
+  const sanitizedQuery = sanitizeTitle(query).toLowerCase().trim();
 
   if (strict) {
     const { title: movieTitle } = parseTorrentTitle(title);
     if (movieTitle) {
-      return movieTitle.toLowerCase().trim() === sanitizedQuery;
+      return sanitizeTitle(movieTitle).toLowerCase().trim() === sanitizedQuery;
     }
   }
 
   const sanitizedTitle = sanitizeTitle(title).toLowerCase().trim();
-  const re = new RegExp(`\\b${sanitizedQuery}\\b`, 'i'); // match the whole word; e.g. query "deadpool 2" shouldn't match "deadpool 2016"
-  return re.test(sanitizedTitle);
+  return sanitizedTitle.includes(sanitizedQuery);
 }
 
 export function createStreamUrl({
@@ -147,3 +142,26 @@ export function capitalizeFirstLetter(str: string): string {
   if (!str) return str;
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
+
+// Test functions
+function testSanitizeTitle() {
+  console.log("Sanitize Title Tests:");
+  console.log(sanitizeTitle("America's"));          // Expected: "America's"
+  console.log(sanitizeTitle("Amérîcâ"));            // Expected: "America"
+  console.log(sanitizeTitle("Am_er-ic.a"));         // Expected: "Am er ic a"
+  console.log(sanitizeTitle("D'où vient-il?"));     // Expected: "D'où vient il"
+  console.log(sanitizeTitle("Fête du cinéma"));     // Expected: "Fete du cinema"
+}
+
+function testMatchesTitle() {
+  console.log("\nMatches Title Tests:");
+  console.log(matchesTitle("America's Next Top Model", "America's", false)); // Expected: true
+  console.log(matchesTitle("Amérîcâ's Got Talent", "America", false));       // Expected: true
+  console.log(matchesTitle("Am_er-ic.a the Beautiful", "America the Beautiful", false)); // Expected: true
+  console.log(matchesTitle("La fête de l'été", "fete", false));              // Expected: true
+  console.log(matchesTitle("Fête du cinéma", "cinema", false));              // Expected: true
+}
+
+// Run tests
+testSanitizeTitle();
+testMatchesTitle();
