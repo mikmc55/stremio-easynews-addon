@@ -40,6 +40,8 @@ export function matchesTitle(title: string, query: string, strict: boolean) {
   }
 
   const sanitizedTitle = sanitizeTitle(title).toLowerCase().trim();
+  
+  // Updated to use `includes` for a flexible match
   return sanitizedTitle.includes(sanitizedQuery);
 }
 
