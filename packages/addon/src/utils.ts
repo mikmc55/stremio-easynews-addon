@@ -1,4 +1,4 @@
- { EasynewsSearchResponse, FileData } from '@easynews/api';
+import { EasynewsSearchResponse, FileData } from '@easynews/api';
 import { MetaProviderResponse } from './meta';
 import { ContentType } from 'stremio-addon-sdk';
 import { parse as parseTorrentTitle } from 'parse-torrent-title';
@@ -20,7 +20,7 @@ export function sanitizeTitle(title: string) {
     title
       // Normalize accents (e.g., é -> e, à -> a)
       .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-      // Replace common separators with spaces
+      // replace common separators with spaces
       .replaceAll('-', ' ')
       .replaceAll('_', ' ')
       .replaceAll('.', ' ')
@@ -28,42 +28,22 @@ export function sanitizeTitle(title: string) {
       .replace(/[^\w\s']/g, '') 
       // Replace multiple spaces with a single space
       .replace(/\s+/g, ' ') 
-      // Remove spaces at the beginning and end
+      // remove spaces at the beginning and end
       .trim()
   );
 }
 
-export function cleanTitle(name = "") {
-  return sanitizeTitle(name)
-    .toLowerCase()
-    .replace(/\s+the\s+/g, " ")
-    .replace(/\s+and\s+/g, " ")
-    .replace(/\s+of\s+/g, " ")
-    .replace(/\s+in\s+/g, " ")
-    .replace(/\s+to\s+/g, " ")
-    .replace(/\s+it\s+/g, " ")
-    .replace(/\s+is\s+/g, " ")
-    .replace(/\s+for\s+/g, " ")
-    .replace(/\s+that\s+/g, " ")
-    .replace(/\s+on\s+/g, " ")
-    .replace(/\s+at\s+/g, " ")
-    .replace(/\s+with\s+/g, " ")
-    .replace(/\s+a\s+/g, " ")
-    .replace(/\s+an\s+/g, " ")
-    .trim();
-}
-
 export function matchesTitle(title: string, query: string, strict: boolean) {
-  const sanitizedQuery = cleanTitle(query).toLowerCase().trim();
+  const sanitizedQuery = sanitizeTitle(query).toLowerCase().trim();
 
   if (strict) {
     const { title: movieTitle } = parseTorrentTitle(title);
     if (movieTitle) {
-      return cleanTitle(movieTitle).toLowerCase().trim() === sanitizedQuery;
+      return sanitizeTitle(movieTitle).toLowerCase().trim() === sanitizedQuery;
     }
   }
 
-  const sanitizedTitle = cleanTitle(title).toLowerCase().trim();
+  const sanitizedTitle = sanitizeTitle(title).toLowerCase().trim();
   
   // Updated to use `includes` for a flexible match
   return sanitizedTitle.includes(sanitizedQuery);
@@ -175,7 +155,7 @@ function testSanitizeTitle() {
   console.log(sanitizeTitle("America's"));          // Expected: "America's"
   console.log(sanitizeTitle("Amérîcâ"));            // Expected: "America"
   console.log(sanitizeTitle("Am_er-ic.a"));         // Expected: "Am er ic a"
-  console.log(sanitizeTitle("D'où vient-il?"));     // Expected: "D'où vient il"
+  console.log(sanitizeTitle("D'où vient-il?"));     // Expected: "D'ou vient il"
   console.log(sanitizeTitle("Fête du cinéma"));     // Expected: "Fete du cinema"
 }
 
